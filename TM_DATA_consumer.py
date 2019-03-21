@@ -3,7 +3,7 @@ import socket
 import string
 import binascii
 
-HOST_IP = "192.168.1.200"
+HOST_IP = "127.0.0.1"
 #HOST_PORT = 58912+2 ACR 2018-03-23
 HOST_PORT = 58880
 ####FF_PORT => SLV(58880, 16), -- S.C. 2018-03-08: FF_PORT sends data to UDP port group 58880+0..58880+15 (base pattern 0xNNN[0] = 0xE600)
@@ -64,12 +64,14 @@ while Total_Data < Total_data_size :
             LOCAL_L1_COUNT      = (LOCAL_L1_COUNT_31_6 << 6) + LOCAL_L1_COUNT_5_0
             s = 'HEADER :  ' + 'STATUS BIT[2:0]: %01X: '%((int_x >> 58)& 0x7) + 'LOCAL L1 COUNT: %08X '%( LOCAL_L1_COUNT ) + 'HitCount: %02X '%((int_x >> 16) & 0xFF) + 'LOCAL L1 TIMESTAMP: %04X\n'%(int_x & 0xfFFF)
 ##acr 2017-11-16        if (((int_x & 0xFF00000000000000)>>56) == 0x20):
-        if (((int_x & 0xE000000000000000)>>61) == 0x7):
+        elif (((int_x & 0xE000000000000000)>>61) == 0x7):
             s = 'TRAILER: ' + 'LOCAL L1  FRAMENUM [23:0]: %06X: '%((int_x >> 37) & 0xFFFFFF) + 'GEMROC_ID: %02X '%( (int_x >> 32) & 0x1F ) + 'TIGER_ID: %01X '%((int_x >> 27) & 0x7) +'LOCAL L1 COUNT[2:0]: %01X '%((int_x >> 24) & 0x7) + 'LAST COUNT WORD FROM TIGER:CH_ID[5:0]: %02X '%((int_x >> 18) & 0x3F) + 'LAST COUNT WORD FROM TIGER: DATA[17:0]: %05X \n'%(int_x & 0x3FFFF)
 #acr 2017-11-16        if (((int_x & 0xFF00000000000000)>>56) == 0x40):
-        if (((int_x & 0xC000000000000000)>>62) == 0x0):
+        elif (((int_x & 0xC000000000000000)>>62) == 0x0):
             s = 'DATA   : TIGER: %01X '%((int_x >> 59) & 0x7) + 'LAST TIGER FRAME NUM[2:0]: %01X '%((int_x >> 56)& 0x7)+ 'TIGER DATA: ChID: %02X '%((int_x >> 50)& 0x3F)+'tacID: %01X '%((int_x >> 48)& 0x3)+'Tcoarse: %04X '%((int_x >> 32)& 0xFFFF)+'Ecoarse: %03X '%((int_x >> 20)& 0x3FF)+'Tfine: %03X '%((int_x >> 10)& 0x3FF)+'Efine: %03X \n'%(int_x & 0x3FF)
-        out_file.write(s)        
+        else:
+            s='Sequence.\n\n'
+        out_file.write(s)    
 ##-- field size in bits (56 total):   2      6        2       16         10       10     10
 ##-- received_tdata                 "10" & ch_ID & tac_ID & tcoarse & ecoarse & tfine & efine
 ##-- tcoarse(15) should match bit 0 of framecount in the HB FrameWord
